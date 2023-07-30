@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { signUp } from "../../services/userService";
+import { toast } from "react-toastify";
+import { FormFeedback } from "reactstrap";
 
 function Signup() {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    role: '', // Will hold either 'user' or 'admin' or 'vendor'
-    adminId: '',
-    vendorId: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: "", // Will hold either 'user' or 'admin' or 'vendor'
+    adminId: "",
+    vendorId: "",
+  });
+
+  const [error, setError] = useState({
+    errors: {},
+    isError: false,
   });
 
   const handleChange = (e) => {
@@ -20,21 +29,56 @@ function Signup() {
     }));
   };
 
+  //submitting the form
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (formData.role === 'admin' && !formData.adminId.startsWith('B')) {
-      alert('Admin ID must start with B.');
+    // if (error.isError) {
+    //   toast.error("Form Data is Invalid!");
+    //   setError({...error,isError:false})
+    //   return;
+    // }
+
+    if (formData.role === "admin" && !formData.adminId.startsWith("B")) {
+      toast.error("Admin ID must start with B.");
       return;
     }
 
-    if (formData.role === 'vendor' && formData.vendorId.length === 0) {
-      alert('Please provide Vendor ID.');
+    if (formData.role === "vendor" && formData.vendorId.length === 0) {
+      toast.error("Please provide Vendor ID.");
+      return;
+    }
+    if (formData.password.length < 8) {
+      toast.error("minimum 8 characters required");
       return;
     }
 
-    // Perform user registration logic here with formData
-    console.log('User registration data:', formData);
+    //call to server
+    signUp(formData)
+      .then((resp) => {
+        console.log(resp);
+        console.log("success log");
+        toast.success("SignUp successful!");
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          password: "",
+          role: "", // Will hold either 'user' or 'admin' or 'vendor'
+          adminId: "",
+          vendorId: "",
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        console.log("error log");
+        //handling errors
+        setError({
+          errors: error,
+          isError: true,
+        });
+      });
   };
 
   return (
@@ -50,10 +94,21 @@ function Signup() {
               placeholder="Enter First name"
               className="form-control"
               name="firstName"
+              id="fname"
+              pattern="[A-Za-z ]+"
+              required
               value={formData.firstName}
               onChange={handleChange}
+              invalid={
+                error.errors?.response?.formData?.firstName ? true : false
+              }
             />
+            {/* tomention what is the error */}
+            <FormFeedback>
+              {error.errors?.response?.formData?.firstName}
+            </FormFeedback>
           </div>
+
           <div className="mb-2">
             <label htmlFor="lname">Last Name</label>
             <input
@@ -61,9 +116,16 @@ function Signup() {
               placeholder="Enter last name"
               className="form-control"
               name="lastName"
+              id="lname"
               value={formData.lastName}
               onChange={handleChange}
+              invalid={
+                error.errors?.response?.formData?.lastName ? true : false
+              }
             />
+            <FormFeedback>
+              {error.errors?.response?.formData?.lastName}
+            </FormFeedback>
           </div>
           <div className="mb-2">
             <label htmlFor="email">Email</label>
@@ -72,9 +134,35 @@ function Signup() {
               placeholder="Enter email"
               className="form-control"
               name="email"
+              id="email"
+              pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+              required
               value={formData.email}
               onChange={handleChange}
+              invalid={error.errors?.response?.formData?.email ? true : false}
             />
+            <FormFeedback>
+              {error.errors?.response?.formData?.email}
+            </FormFeedback>
+          </div>
+
+          <div className="mb-2">
+            <label htmlFor="phone">Phone Number</label>
+            <input
+              type="tel"
+              placeholder="Enter phone number"
+              className="form-control"
+              name="phone"
+              id="phone"
+              pattern="[0-9]{10}"
+              required
+              value={formData.phone}
+              onChange={handleChange}
+              invalid={error.errors?.response?.formData?.phone ? true : false}
+            />
+            <FormFeedback>
+              {error.errors?.response?.formData?.phone}
+            </FormFeedback>
           </div>
 
           <div className="mb-2">
@@ -84,9 +172,16 @@ function Signup() {
               placeholder="Enter password"
               className="form-control"
               name="password"
+              id="password"
               value={formData.password}
               onChange={handleChange}
+              invalid={
+                error.errors?.response?.formData?.password ? true : false
+              }
             />
+            <FormFeedback>
+              {error.errors?.response?.formData?.password}
+            </FormFeedback>
           </div>
 
           <div className="mb-2">
@@ -99,13 +194,15 @@ function Signup() {
             >
               {/* <option value="">Select Role</option> */}
               {/* <option value="" disabled>Select Role</option> */}
-              <option value="user" selected>User</option>
+              <option value="user" selected>
+                User
+              </option>
               <option value="admin">Admin</option>
               <option value="vendor">Vendor</option>
             </select>
           </div>
 
-          {formData.role === 'admin' && (
+          {formData.role === "admin" && (
             <div className="mb-2">
               <label htmlFor="adminId">Admin ID </label>
               <input
@@ -115,11 +212,17 @@ function Signup() {
                 name="adminId"
                 value={formData.adminId}
                 onChange={handleChange}
+                invalid={
+                  error.errors?.response?.formData?.adminId ? true : false
+                }
               />
+              <FormFeedback>
+                {error.errors?.response?.formData?.adminId}
+              </FormFeedback>
             </div>
           )}
 
-          {formData.role === 'vendor' && (
+          {formData.role === "vendor" && (
             <div className="mb-2">
               <label htmlFor="vendorId">Vendor ID</label>
               <input
@@ -129,7 +232,13 @@ function Signup() {
                 name="vendorId"
                 value={formData.vendorId}
                 onChange={handleChange}
+                invalid={
+                  error.errors?.response?.formData?.vendorId ? true : false
+                }
               />
+              <FormFeedback>
+                {error.errors?.response?.formData?.vendorId}
+              </FormFeedback>
             </div>
           )}
 
@@ -137,7 +246,10 @@ function Signup() {
             <button className="btn btn-primary">Sign up</button>
           </div>
           <p className="text-end mt-2">
-            Already registered? <Link to="/" className="ms-2">Sign in</Link>
+            Already registered?{" "}
+            <Link to="/" className="ms-2">
+              Sign in
+            </Link>
           </p>
         </form>
       </div>

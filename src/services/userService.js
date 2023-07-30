@@ -2,8 +2,16 @@
 
 import { myAxios } from "./helper";
 
-export const signUp = (user) => {
+//change the post api call according to backend
+export const signUp = (signupData) => {
   return myAxios
-    .post("/api/v1/auth/register")
+    .post("/api/auth/register", signupData)
+    .then((response) => response.data);
+};
+
+//change the post api call according to backend
+export const login = (loginData) => {
+  return myAxios
+    .post("/api/auth/login", loginData)
     .then((response) => response.data);
 };
